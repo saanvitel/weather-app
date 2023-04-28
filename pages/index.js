@@ -41,7 +41,7 @@ export default function Home() {
       <main className={`${styles.main} ${inter.className}`}>
         <div className={styles.description}>
           <p>
-            The temperature is:&nbsp;
+            The temperature is: &nbsp;
             <code className={styles.code}>{isCelcius ? temp : Math.floor((temp*9/5) + 32)}</code> &nbsp;
              {isCelcius ? "celcius" : "fahrenheit"} in&nbsp;
             <code className={styles.code}>{address}</code>
