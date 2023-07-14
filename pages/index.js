@@ -10,7 +10,7 @@ const inter = Inter({ subsets: ["latin"] });
 
 export default function Home() {
   const [pageURL, setPageURL] = useState("");
-  const [temp, setTemp] = useState(20);
+  const [temp, setTemp] = useState("*");
   const [isCelcius, setIsCelcius] = useState(true);
   const [icon, setIcon] = useState("");
   const [address, setAddress] = useState(null);
@@ -28,9 +28,13 @@ export default function Home() {
   https: useEffect(() => {
     if (longlat !== null) {
       reverseGeoCode();
-      fetchWeather();
     }
   }, [longlat]);
+  https: useEffect(() => {
+    if (address !== null) {
+      fetchWeather();
+    }
+  }, [address]);
 
   async function reverseGeoCode() {
     const response = await fetch(geoComposedURL, {
