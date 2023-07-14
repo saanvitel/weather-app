@@ -1,34 +1,86 @@
-import Head from 'next/head'
-import Image from 'next/image'
-import { Inter } from 'next/font/google'
-import styles from '@/styles/Home.module.css'
-import React, { useState, useEffect } from 'react';
+"use client";
 
-const inter = Inter({ subsets: ['latin'] })
+import Head from "next/head";
+import Image from "next/image";
+import { Inter } from "next/font/google";
+import styles from "@/styles/Home.module.css";
+import React, { useState, useEffect } from "react";
+
+const inter = Inter({ subsets: ["latin"] });
 
 export default function Home() {
+  const [pageURL, setPageURL] = useState("");
   const [temp, setTemp] = useState(20);
   const [isCelcius, setIsCelcius] = useState(true);
-  const [address, setAddress] = useState("a place near you");
+  const [icon, setIcon] = useState("");
+  const [address, setAddress] = useState(null);
+  const [longlat, setLonglat] = useState(null);
+  let geoComposedURL = `https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(
+    longlat
+  )}&key=3957d198d90746379bd19dc96ca58f77`;
+  let weatherComposedURL = `https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/${encodeURIComponent(
+    address
+  )}?unitGroup=metric&key=F34RGXAKG75EX69MUH7E6W7WQ&contentType=json`;
+
+  //api.opencagedata.com/geocode/v1/json?q=-37.8125915+144.9711435&key=3957d198d90746379bd19dc96ca58f77
 
   // Fetch the weather only once
-  useEffect(()=>{
-    fetchWeather();
-  },[]);
+  https: useEffect(() => {
+    if (longlat !== null) {
+      reverseGeoCode();
+      fetchWeather();
+    }
+  }, [longlat]);
+
+  async function reverseGeoCode() {
+    const response = await fetch(geoComposedURL, {
+      method: "GET",
+      headers: {},
+    });
+
+    const location = await response.json();
+    console.log(location);
+    console.log(location.results[0].formatted);
+    setAddress(location.results[0].formatted);
+  }
 
   // API call to another website, which takes some time to return a result
   async function fetchWeather() {
-    const response = await fetch("https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/melbourne?unitGroup=metric&key=F34RGXAKG75EX69MUH7E6W7WQ&contentType=json", {
-      "method": "GET",
-      "headers": {
-      }
-      })
+    const response = await fetch(weatherComposedURL, {
+      method: "GET",
+      headers: {},
+    });
     // Here the weather data gets returned
     const weather = await response.json();
     setTemp(weather.currentConditions.temp);
     setAddress(weather.address);
+    setIcon(weather.currentConditions.icon);
+    console.log(weather);
   }
 
+  if (typeof window !== "undefined") {
+    const options = {
+      enableHighAccuracy: true,
+      timeout: 5000,
+      maximumAge: 0,
+    };
+
+    function success(pos) {
+      const crd = pos.coords;
+
+      console.log("Your current position is:");
+      console.log(`Latitude : ${crd.latitude}`);
+      console.log(`Longitude: ${crd.longitude}`);
+      console.log(`More or less ${crd.accuracy} meters.`);
+      setLonglat(crd.latitude + "+" + crd.longitude);
+    }
+
+    function error(err) {
+      console.warn(`ERROR(${err.code}): ${err.message}`);
+    }
+
+    window.navigator.geolocation.getCurrentPosition(success, error, options);
+  }
 
   return (
     <>
@@ -42,12 +94,27 @@ export default function Home() {
         <div className={styles.description}>
           <p>
             The temperature is: &nbsp;
-            <code className={styles.code}>{isCelcius ? temp : Math.floor((temp*9/5) + 32)}</code> &nbsp;
-             {isCelcius ? "celcius" : "fahrenheit"} in&nbsp;
+            <code className={styles.code}>
+              {isCelcius ? temp : Math.floor((temp * 9) / 5 + 32)}
+            </code>{" "}
+            &nbsp;
+            {isCelcius ? "celcius" : "fahrenheit"} in&nbsp;
             <code className={styles.code}>{address}</code>
           </p>
-          <button onClick={()=>{setIsCelcius(!isCelcius)}}>Hello</button>
-          </div></main> 
+          <button
+            onClick={() => {
+              setIsCelcius(!isCelcius);
+            }}
+          >
+            {"set to " + (isCelcius ? "fahrenheit" : "celcius")}
+          </button>
+        </div>
+        {/* <div className={styles.description}>
+          <p>
+            <img src={icon}></img>
+          </p>
+        </div> */}
+      </main>
     </>
-  )
+  );
 }
